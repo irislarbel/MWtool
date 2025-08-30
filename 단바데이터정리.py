@@ -7,9 +7,53 @@ FIRST_CHECK = True
 modes = [
     '기본',
     'mbti전용(기본 + e:i추가)',
-    '최대최소최빈값평균',
-    '자동(전투력유니온아티팩트등등에쓰세요.. 적당한단위로잘라서분류해줌)'
+    '최대최소중앙값평균',
+    '자동(전투력유니온아티팩트등등에쓰세요.. 적당한단위로잘라서분류해줌)',
+    '결과미합산잇는항목은 이거쓰세요 제외가능'
 ]
+mbti = [
+    'INTP',
+    'ENTP',
+    'INTJ',
+    'ENTJ',
+    'INFP',
+    'INFJ',
+    'ENFP',
+    'ENFJ',
+    'ISTP',
+    'ESFP',
+    'ISFP',
+    'ESTP',
+    'ISTJ',
+    'ISFJ',
+    'ESFJ',
+    'ESTJ'
+]
+
+def count_mbti(type1, type2, data, locate):
+    print(f'\n{type1}/{type2}')
+    count_1 = count_2 = 0
+    for i in data:
+        if i[locate] == type1 :
+            count_1 += data[i]
+        else:
+            count_2 += data[i]
+    print(f'{type1} {count_1}명 {round((count_1/(count_1+count_2))*100,4)}%, {type2} {count_2}명 {round((count_2/(count_1+count_2))*100,4)}% 입니다.')
+
+def result_print(data, m_num, mb = None):
+    all_count = 0
+    r_keys = list(data.keys())
+    for i in r_keys:
+        all_count += data[i]
+        
+    if m_num == 1:
+        for i in r_keys:
+            print(f'{i}: {data[i]}명  {round((data[i]/all_count)*100,4)}%')
+            mb.remove(i)
+        return mb
+    else:
+        for i in r_keys:
+            print(f'{i}: {data[i]}명  {round((data[i]/all_count)*100,4)}%')
 
 while extention != ".txt":
     file_path_user = input("txt파일을 끌어넣어 주세요.\n파일 경로: ")
@@ -74,27 +118,103 @@ while True:
     for k,i in enumerate(use_index):
         print(f'{data_index[i]} : {k}')
     check_num = input('\n분류가 완료되었습니다. 확인하고 싶은 목차의 번호를 입력하세요: ')
-    if isinstance(check_num, int) :
+    try:
+        check_num = int(check_num)
+    except:
         print('입력이 잘못되었습니다.')
         continue
+    
+    if check_num > len(use_index) or check_num < 0 :
+        print('입력이 잘못되었습니다.')
+        continue
+
     for k, i in enumerate(modes):
         print(f'\n{i} : {k}')
     check_num = int(check_num)
     mode_num = input(f'\n{data_index[use_index[check_num]]} 목차를 선택하셨습니다. 처리 모드를 선택하세요: ')
     
-    if isinstance(mode_num, int) :
+    try:
+        mode_num = int(mode_num)
+    except:
         print('입력이 잘못되었습니다.')
         continue
-    elif int(mode_num) > len(modes):
+    
+    if mode_num > len(modes) or mode_num < 0 :
         print('입력이 잘못되었습니다.')
         continue
+    
     mode_num = int(mode_num)
-    if input(f'{data_index[use_index[check_num]]}를 {modes[mode_num]} 모드를 사용하여 처리할까요? (Y/N): ') != 'Y':
+    if input(f'{data_index[use_index[check_num]]} 목차를 {modes[mode_num]} 모드를 사용하여 처리할까요? (Y/N): ') != 'Y':
         continue
+    
     if mode_num == 0:
-        print(f'\n{data_index[use_index[check_num]]}')
-        for i in range(data_result[data_index[use_index[check_num]]].keys):
-            print(f'{data_result[data_index[use_index[check_num]]].keys}: {data_result[data_index[use_index[check_num]]][data_result[data_index[use_index]].keys]}명')
+        data_result[data_index[use_index[check_num]]] = dict(sorted(data_result[data_index[use_index[check_num]]].items()))
+        result_print(data_result[data_index[use_index[check_num]]], mode_num)
+        isquit = input('종료를 원하시면 Y, 다른 목차를 처리하고 싶으시면 N을 입력하세요: ')
+        if isquit == 'Y':
+            sys.quit()
+        else:
+            continue
+        
+    if mode_num == 1:
+        data_result[data_index[use_index[check_num]]] = dict(sorted(data_result[data_index[use_index[check_num]]].items(), key=lambda x: x[1], reverse=True))
+        print(data_result[data_index[use_index[check_num]]])
+        result_keys = list(data_result[data_index[use_index[check_num]]].keys())
+        try:
+            for i in range(len(result_keys)):
+                result_keys[i] = result_keys[i].upper().strip()
+                if result_keys[i] not in mbti:
+                    print('mbti가 아닌 데이터가 포함되어 있습니다.')
+                    print(result_keys[i])
+        except:
+            print('데이터에 오류가 있습니다. mbti가 아닌 데이터가 있는지 확인 해 주세요. 데이터는 EnTP와 같이 대/소문자를 가리지 않으나, 엔팁 또는 2엔티피로 입력할 시 인식할 수 없습니다.')
+            sys.exit()
+            
+        mbti = result_print(data_result[data_index[use_index[check_num]]], mode_num, mbti)
+        if len(result_keys) < 16:
+            for i in mbti:
+                print(f'{i}: 0명  0%')
+                
+        count_mbti('I','E',data_result[data_index[use_index[check_num]]], 0)
+        count_mbti('N','S',data_result[data_index[use_index[check_num]]], 1)
+        count_mbti('T','F',data_result[data_index[use_index[check_num]]], 2)
+        count_mbti('J','P',data_result[data_index[use_index[check_num]]], 3)
+        
+        isquit = input('종료를 원하시면 Y, 다른 목차를 처리하고 싶으시면 N을 입력하세요: ')
+        if isquit == 'Y':
+            sys.quit()
+        else:
+            continue
+        
+    if mode_num == 2:
+        middle_num = 0
+        data_result[data_index[use_index[check_num]]] = dict(sorted(data_result[data_index[use_index[check_num]]].items(), reverse = True))
+        result_keys = list(data_result[data_index[use_index[check_num]]].keys())
+        
+        print(f'최댓값은 {result_keys[0]} 입니다.')
+        print(f'최솟값은 {result_keys[-1]} 입니다.')
+        for i in result_keys:
+            middle_num += int(data_result[data_index[use_index[check_num]]][i])
+        if middle_num%2 == 0:
+            middle_num = int(middle_num/2)
+            middle_num = (int(result_keys[middle_num-1]) + int(result_keys[middle_num]))/2
+        else:
+            middle_num = middle_num/2 + 0.5
+            for i in result_keys:
+                
+                middle_num - int(data_result[data_index[use_index[check_num]]][i])
+                if middle_num <= 0:
+                    middle_num = int(i)
+                    continue
+            middle_num = result_keys[middle_num-1]
+        print(f'중앙값은 {middle_num} 입니다.')
+        aver_sum = aver_count = 0
+        for i in result_keys:
+            aver_sum += int(i)*int(data_result[data_index[use_index[check_num]]][i])
+            
+            aver_count += int(data_result[data_index[use_index[check_num]]][i])
+            
+        print(f'평균은 {round(aver_sum/aver_count, 3)}입니다')
         isquit = input('종료를 원하시면 Y, 다른 목차를 처리하고 싶으시면 N을 입력하세요: ')
         if isquit == 'Y':
             sys.quit()
