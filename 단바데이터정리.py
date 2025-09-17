@@ -8,7 +8,7 @@ modes = [
     '기본',
     'mbti전용(기본 + e:i추가)',
     '최대최소중앙값평균',
-    '자동(전투력유니온아티팩트등등에쓰세요.. 적당한단위로잘라서분류해줌)',
+    '단위분류',
     '결과미합산잇는항목은 이거쓰세요 제외가능'
 ]
 mbti = [
@@ -30,6 +30,7 @@ mbti = [
     'ESTJ'
 ]
 
+
 def count_mbti(type1, type2, data, locate):
     print(f'\n{type1}/{type2}')
     count_1 = count_2 = 0
@@ -40,18 +41,27 @@ def count_mbti(type1, type2, data, locate):
             count_2 += data[i]
     print(f'{type1} {count_1}명 {round((count_1/(count_1+count_2))*100,4)}%, {type2} {count_2}명 {round((count_2/(count_1+count_2))*100,4)}% 입니다.')
 
-def result_print(data, m_num, mb = None):
+def result_print(data, m_num, mb = None, no_calc = None):
     all_count = 0
     r_keys = list(data.keys())
-    for i in r_keys:
-        all_count += data[i]
+
         
     if m_num == 1:
+        for i in r_keys:
+            all_count += data[i]
         for i in r_keys:
             print(f'{i}: {data[i]}명  {round((data[i]/all_count)*100,4)}%')
             mb.remove(i)
         return mb
+    elif m_num == 4:
+        del r_keys[no_calc]
+        for i in r_keys:
+            all_count += data[i]
+        for i in r_keys:
+            print(f'{i}: {data[i]}명  {round((data[i]/all_count)*100,4)}%')
     else:
+        for i in r_keys:
+            all_count += data[i]
         for i in r_keys:
             print(f'{i}: {data[i]}명  {round((data[i]/all_count)*100,4)}%')
 
@@ -152,7 +162,7 @@ while True:
         result_print(data_result[data_index[use_index[check_num]]], mode_num)
         isquit = input('종료를 원하시면 Y, 다른 목차를 처리하고 싶으시면 N을 입력하세요: ')
         if isquit == 'Y':
-            sys.quit()
+            sys.exit()
         else:
             continue
         
@@ -182,41 +192,84 @@ while True:
         
         isquit = input('종료를 원하시면 Y, 다른 목차를 처리하고 싶으시면 N을 입력하세요: ')
         if isquit == 'Y':
-            sys.quit()
+            sys.exit()
         else:
             continue
         
     if mode_num == 2:
-        middle_num = 0
-        data_result[data_index[use_index[check_num]]] = dict(sorted(data_result[data_index[use_index[check_num]]].items(), reverse = True))
-        result_keys = list(data_result[data_index[use_index[check_num]]].keys())
-        
-        print(f'최댓값은 {result_keys[0]} 입니다.')
-        print(f'최솟값은 {result_keys[-1]} 입니다.')
-        for i in result_keys:
-            middle_num += int(data_result[data_index[use_index[check_num]]][i])
-        if middle_num%2 == 0:
-            middle_num = int(middle_num/2)
-            middle_num = (int(result_keys[middle_num-1]) + int(result_keys[middle_num]))/2
-        else:
-            middle_num = middle_num/2 + 0.5
+        try:
+            middle_num = 0
+            data_result[data_index[use_index[check_num]]] = dict(sorted(data_result[data_index[use_index[check_num]]].items(), reverse = True))
+            result_keys = list(data_result[data_index[use_index[check_num]]].keys())
+            print(f'최댓값은 {result_keys[0]} 입니다.')
+            print(f'최솟값은 {result_keys[-1]} 입니다.')
             for i in result_keys:
+                middle_num += int(data_result[data_index[use_index[check_num]]][i])
+            if middle_num%2 == 0:
+                middle_num = int(middle_num/2)
+                middle_num = (int(result_keys[middle_num-1]) + int(result_keys[middle_num]))/2
+            else:
+                middle_num = middle_num/2 + 0.5
+                for i in result_keys:
+                    
+                    middle_num - int(data_result[data_index[use_index[check_num]]][i])
+                    if middle_num <= 0:
+                        middle_num = int(i)
+                        continue
+                middle_num = result_keys[middle_num-1]
+            print(f'중앙값은 {middle_num} 입니다.')
+            aver_sum = aver_count = 0
+            for i in result_keys:
+                aver_sum += int(i)*int(data_result[data_index[use_index[check_num]]][i])
                 
-                middle_num - int(data_result[data_index[use_index[check_num]]][i])
-                if middle_num <= 0:
-                    middle_num = int(i)
-                    continue
-            middle_num = result_keys[middle_num-1]
-        print(f'중앙값은 {middle_num} 입니다.')
-        aver_sum = aver_count = 0
-        for i in result_keys:
-            aver_sum += int(i)*int(data_result[data_index[use_index[check_num]]][i])
+                aver_count += int(data_result[data_index[use_index[check_num]]][i])
+                
+            print(f'평균은 {round(aver_sum/aver_count, 3)}입니다')
+
+        except:
+            print('숫자가 아닌 데이터가 있습니다. 데이터를 확인 해 주세요.')
+            sys.exit()
             
-            aver_count += int(data_result[data_index[use_index[check_num]]][i])
-            
-        print(f'평균은 {round(aver_sum/aver_count, 3)}입니다')
         isquit = input('종료를 원하시면 Y, 다른 목차를 처리하고 싶으시면 N을 입력하세요: ')
         if isquit == 'Y':
-            sys.quit()
+            sys.exit()
+        else:
+            continue
+        
+    if mode_num == 3:
+            unit_size = int(input('처리 단위를 입력하세요: '))
+            min_size = int(input('시작값을 입력하세요(레벨일경우 260, 유니온은 6000 등등..) :'))
+            
+            data_result[data_index[use_index[check_num]]] = dict(sorted(data_result[data_index[use_index[check_num]]].items(), reverse = True))
+            result_keys = list(data_result[data_index[use_index[check_num]]].keys())
+            result_unit = [f'0~{min_size-1}']
+            result_unit_data = [0]
+            i=1
+            while min_size-1 + unit_size*i < int(result_keys[0]):
+                result_unit.append(f'{min_size + unit_size*(i-1)} ~ {min_size-1 + unit_size*i}')
+                result_unit_data.append(0)
+                i+=1
+            result_unit.append(f'{min_size + unit_size*(i-1)} ~ {min_size-1 + unit_size*i}')
+            result_unit_data.append(0)
+            for i in result_keys:
+                if int(i) < min_size:
+                    result_unit_data[0] += 1
+                else:
+                    result_unit_data[((int(i) - min_size) // unit_size)+1] += 1
+                    
+            for i in range(len(result_unit)):
+                print(f'{result_unit[i]} : {result_unit_data[i]}명 {round(result_unit_data[i]/len(result_keys)*100,4)}%')
+                
+    if mode_num == 4:
+        data_result[data_index[use_index[check_num]]] = dict(sorted(data_result[data_index[use_index[check_num]]].items()))
+        for i in range(len(list(data_result[data_index[use_index[check_num]]].keys()))):
+            print(f'{list(data_result[data_index[use_index[check_num]]].keys())[i]} : {i}')
+        no_calc = int(input('사용하지 않을 데이터를 선택하세요: '))
+        
+        
+        result_print(data_result[data_index[use_index[check_num]]], mode_num, no_calc=no_calc)
+        isquit = input('종료를 원하시면 Y, 다른 목차를 처리하고 싶으시면 N을 입력하세요: ')
+        if isquit == 'Y':
+            sys.exit()
         else:
             continue
